@@ -36,11 +36,9 @@ export const createAsyncAction = <S, E, A extends ReduxAction>() => {
   >(
     handel: Handel
   ) => {
-    return (...args: Parameters<Handel>): ThunkAction<ReturnType<ReturnType<Handel>>, S, E, A> => (
-      dispatch,
-      getState,
-      extraArgument
-    ) => handel(...args)(dispatch, (selector) => selector(getState()), extraArgument)
+    return (...args: Parameters<Handel>): ThunkAction<ReturnType<ReturnType<Handel>>, S, E, A> =>
+      (dispatch, getState, extraArgument) =>
+        handel(...args)(dispatch, (selector) => selector(getState()), extraArgument)
   }
 }
 
