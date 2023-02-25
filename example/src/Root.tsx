@@ -10,7 +10,7 @@ export const Root: React.FC = () => {
 
   return (
     <div>
-      <p>PageHelloWorld</p>
+      <p>react-store-example</p>
       <p>num: {num}</p>
       <p>
         <button onClick={() => dispatch(demoActions.increment())}>increment</button>
