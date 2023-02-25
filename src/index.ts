@@ -1,49 +1,43 @@
-import { ThunkAction, ThunkDispatch } from 'redux-thunk'
-import { Action as ReduxAction } from 'redux'
+import { createSlice as __createSlice, Draft, PayloadAction } from '@reduxjs/toolkit'
 
-export type StoreAction<Store> = {
-  type: string
-  namespace: string
-  action: (store: Store) => Partial<Store>
-}
+export const createSlice = <T>(name: string, initialState: T) => {
+  const __slice = __createSlice({
+    name,
+    initialState,
+    reducers: {
+      __ACTION: (state: Draft<T>, action: PayloadAction<(state: T) => T | void>) => {
+        const newState = action.payload(state as T)
+        if (newState) {
+          return newState
+        }
+      },
+    },
+  })
 
-export const createAction = <Store extends {}>(namespace: string) => {
-  return <Handel extends (...args: any[]) => Partial<Store> | ((store: Store) => Partial<Store>)>(
-    handel: Handel
-  ) => {
-    return (...args: Parameters<Handel>): StoreAction<Store> => {
-      const result = handel(...args)
-      const action: (store: Store) => Partial<Store> =
-        typeof result === 'function' ? result : () => result
-      return {
-        type: '@@ACTION',
-        namespace,
-        action,
-      }
-    }
-  }
-}
+  const reducer = __slice.reducer
 
-export const createAsyncAction = <S, E, A extends ReduxAction>() => {
-  return <
-    Handel extends (
-      ...args: any[]
-    ) => (
-      dispatch: ThunkDispatch<S, E, A>,
-      selector: <T>(selector: (store: S) => T) => T,
-      extraArgument: E
-    ) => any
+  const __ACTION = __slice.actions.__ACTION
+
+  const action = <
+    Handel extends (...args: any[]) => Partial<T> | ((state: T) => Partial<T> | void)
   >(
     handel: Handel
   ) => {
-    return (...args: Parameters<Handel>): ThunkAction<ReturnType<ReturnType<Handel>>, S, E, A> =>
-      (dispatch, getState, extraArgument) =>
-        handel(...args)(dispatch, (selector) => selector(getState()), extraArgument)
+    return (...args: Parameters<Handel>) => {
+      const result = handel(...args)
+      const action: (state: T) => Partial<T> | void =
+        typeof result === 'function' ? result : () => result
+      return __ACTION((state) => {
+        const newState = action(state)
+        if (newState) {
+          return { ...state, ...newState }
+        }
+      })
+    }
   }
-}
 
-export const createReducer = <Store extends {}>(namespace: string, defaultStore: Store) => {
-  return (store: Store = defaultStore, action: StoreAction<Store>) => {
-    return action.namespace === namespace ? { ...store, ...action.action(store) } : store
+  return {
+    reducer,
+    action,
   }
 }
